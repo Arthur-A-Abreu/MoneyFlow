@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}MoneyFlow — Plataforma Inteligente de Gestão Financeira{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  
+  <!-- Hero Section -->
+  <div class="row align-items-center py-5 gy-5">
+    <div class="col-lg-6 text-center text-lg-start">
+      <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary fw-semibold small mb-3 border border-primary border-opacity-25">
+        <i class="bi bi-stars"></i> A evolução definitiva da sua planilha financeira
+      </div>
+      <h1 class="display-4 fw-extrabold text-main tracking-tight mb-3">
+        Controle seu dinheiro com elegância e inteligência.
+      </h1>
+      <p class="lead text-main mb-4">
+        Uma experiência SaaS moderna com extrato bancário unificado, dashboards interativos, análises preditivas em tempo real e privacidade total.
+      </p>
+      <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+        <a href="{% url 'account_signup' %}" class="btn btn-primary-custom btn-lg px-4 py-3">
+          <i class="bi bi-rocket-takeoff-fill me-2"></i> Criar Conta Gratuita
+        </a>
+        <a href="{% url 'account_login' %}" class="btn btn-outline-custom btn-lg px-4 py-3">
+          Acessar Meu Painel
+        </a>
+      </div>
+    </div>
+    
+    <div class="col-lg-6">
+      <!-- Mockup do Dashboard -->
+      <div class="saas-card shadow-lg p-3 border-2">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+          <div class="d-flex gap-2">
+            <span class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></span>
+            <span class="rounded-circle bg-warning" style="width: 10px; height: 10px;"></span>
+            <span class="rounded-circle bg-success" style="width: 10px; height: 10px;"></span>
+          </div>
+          <span class="badge bg-light text-secondary border">Dashboard ao Vivo</span>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="metric-card metric-card-income p-2">
+              <span class="metric-label small">Receitas</span>
+              <div class="fw-bold text-success">+ R$ 8.450,00</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="metric-card metric-card-expense p-2">
+              <span class="metric-label small">Despesas</span>
+              <div class="fw-bold text-danger">- R$ 3.820,00</div>
+            </div>
+          </div>
+        </div>
+        <div class="insight-card insight-card-success py-2 px-3 small mb-2">
+          <i class="bi bi-trophy insight-icon text-success"></i>
+          <div>Você economizou <strong>R$ 4.630,00</strong> este mês!</div>
+        </div>
+        <div class="insight-card insight-card-info py-2 px-3 small mb-0">
+          <i class="bi bi-calculator insight-icon text-primary"></i>
+          <div>No ritmo atual, fechará o mês com <strong>54%</strong> de taxa de poupança.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Grid -->
+  <div class="row g-4 py-5 border-top">
+    <div class="col-md-4">
+      <div class="saas-card h-100 p-4">
+        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px;">
+          <i class="bi bi-arrow-left-right fs-4"></i>
+        </div>
+        <h5 class="fw-bold text-main">Extrato Unificado</h5>
+        <p class="text-main mb-0">Receitas e despesas na mesma visão, sem telas separadas. Rápido, claro e direto ao ponto.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="saas-card h-100 p-4">
+        <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px;">
+          <i class="bi bi-lightning-charge-fill fs-4"></i>
+        </div>
+        <h5 class="fw-bold text-main">Insights Automáticos</h5>
+        <p class="text-main mb-0">O sistema analisa seus hábitos e gera diagnósticos em texto com variações mês a mês e metas.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="saas-card h-100 p-4">
+        <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px;">
+          <i class="bi bi-shield-check fs-4"></i>
+        </div>
+        <h5 class="fw-bold text-main">Privacidade Absoluta</h5>
+        <p class="text-main mb-0">Isolamento rigoroso por usuário no banco de dados. Seus dados financeiros pertencem apenas a você.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

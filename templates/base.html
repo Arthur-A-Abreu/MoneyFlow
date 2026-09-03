@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MoneyFlow — Gestão Financeira Pessoal{% endblock %}</title>
+  
+  <!-- Google Fonts & Bootstrap 5 & Bootstrap Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+  <!-- Custom CSS Design System -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand navbar-brand-logo" href="{% if user.is_authenticated %}{% url 'dashboard:home' %}{% else %}{% url 'dashboard:landing' %}{% endif %}">
+        <div class="navbar-brand-icon">
+          <i class="bi bi-wallet-fill"></i>
+        </div>
+        <span>MoneyFlow</span>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Menu">
+        <i class="bi bi-list fs-3 text-secondary"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarMain">
+        {% if user.is_authenticated %}
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-lg-1">
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}" href="{% url 'dashboard:home' %}">
+              <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if 'finance' in request.resolver_match.app_name and 'categories' not in request.path %}active{% endif %}" href="{% url 'finance:transaction_list' %}">
+              <i class="bi bi-arrow-left-right"></i> Extrato Único
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if 'categories' in request.path %}active{% endif %}" href="{% url 'finance:category_list' %}">
+              <i class="bi bi-tags-fill"></i> Categorias
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if 'insights' in request.resolver_match.app_name %}active{% endif %}" href="{% url 'insights:index' %}">
+              <i class="bi bi-lightning-charge-fill text-warning"></i> Insights
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if 'reports' in request.resolver_match.app_name %}active{% endif %}" href="{% url 'reports:generator' %}">
+              <i class="bi bi-file-earmark-bar-graph-fill"></i> Relatórios
+            </a>
+          </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+          <!-- Ação Rápida: Nova Movimentação -->
+          <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm">
+            <i class="bi bi-plus-lg"></i> Novo Lançamento
+          </a>
+
+          <!-- Alternador de Tema -->
+          <button class="btn btn-outline-custom btn-sm rounded-circle p-2" id="themeToggle" title="Alternar tema">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+
+          <!-- Perfil do Usuário -->
+          <div class="dropdown">
+            <button class="btn btn-outline-custom btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 26px; height: 26px; font-size: 0.75rem; font-weight: 700;">
+                {{ user.username|first|upper }}
+              </div>
+              <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+              <li><h6 class="dropdown-header">{{ user.email }}</h6></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i> Meu Perfil</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:profile_edit' %}"><i class="bi bi-gear me-2"></i> Preferências</a></li>
+              {% if user.is_staff %}
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-primary" href="{% url 'admin:index' %}" target="_blank"><i class="bi bi-shield-lock me-2"></i> Painel Admin</a></li>
+              {% endif %}
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Sair da Conta</a></li>
+            </ul>
+          </div>
+        </div>
+        {% else %}
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <!-- Alternador de Tema para Visitante -->
+          <button class="btn btn-outline-custom btn-sm rounded-circle p-2 me-2" id="themeToggle" title="Alternar tema">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+          <a href="{% url 'account_login' %}" class="btn btn-outline-custom btn-sm">Entrar</a>
+          <a href="{% url 'account_signup' %}" class="btn btn-primary-custom btn-sm">Criar Conta Grátis</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mensagens do Django (Flash Messages) -->
+  {% if messages %}
+  <div class="container-fluid px-lg-4 mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show border-0 shadow-sm d-flex align-items-center gap-2" role="alert">
+      {% if message.tags == 'success' %}
+      <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+      {% elif message.tags == 'danger' or message.tags == 'error' %}
+      <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+      {% elif message.tags == 'warning' %}
+      <i class="bi bi-exclamation-circle-fill fs-5 text-warning"></i>
+      {% else %}
+      <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+      {% endif %}
+      <div>{{ message }}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-grow-1 py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container-fluid px-lg-4 d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+      <div>
+        <strong>MoneyFlow</strong> &copy; {% now "Y" %} — Gestão Financeira Pessoal Inteligente.
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-light text-secondary border">v1.0.0 SaaS</span>
+        <a href="{% url 'insights:index' %}" class="text-decoration-none text-main"><i class="bi bi-lightning-charge"></i> IA Insights</a>
+        <a href="{% url 'reports:generator' %}" class="text-decoration-none text-main"><i class="bi bi-file-earmark-pdf"></i> Exportações</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

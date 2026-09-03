@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Extrato Unificado — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">Extrato de Movimentações</h1>
+      <p class="text-main mb-0">Todas as suas receitas e despesas registradas em um único fluxo temporal.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'reports:generator' %}" class="btn btn-outline-custom btn-sm">
+        <i class="bi bi-download me-1"></i> Exportar Extrato
+      </a>
+      <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm">
+        <i class="bi bi-plus-lg"></i> Novo Lançamento
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros Inteligentes -->
+  <div class="saas-card mb-4">
+    <div class="saas-card-body py-3">
+      <form method="GET" class="row g-2 align-items-center">
+        <!-- Busca de Texto -->
+        <div class="col-md-3">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-main"></i></span>
+            <input type="text" name="search" class="form-control border-start-0" placeholder="Buscar descrição..." value="{{ current_filters.search }}">
+          </div>
+        </div>
+
+        <!-- Filtro Tipo -->
+        <div class="col-md-2">
+          <select name="type" class="form-select form-select-sm">
+            <option value="">Todos os Tipos</option>
+            <option value="INCOME" {% if current_filters.type == 'INCOME' %}selected{% endif %}>Receitas (+)</option>
+            <option value="EXPENSE" {% if current_filters.type == 'EXPENSE' %}selected{% endif %}>Despesas (-)</option>
+          </select>
+        </div>
+
+        <!-- Filtro Categoria -->
+        <div class="col-md-2">
+          <select name="category" class="form-select form-select-sm">
+            <option value="">Todas as Categorias</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if current_filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filtro Data De -->
+        <div class="col-md-2">
+          <input type="date" name="date_from" class="form-control form-control-sm" title="Data inicial" value="{{ current_filters.date_from }}">
+        </div>
+
+        <!-- Filtro Data Até -->
+        <div class="col-md-2">
+          <input type="date" name="date_to" class="form-control form-control-sm" title="Data final" value="{{ current_filters.date_to }}">
+        </div>
+
+        <!-- Botões -->
+        <div class="col-md-1 d-flex gap-1">
+          <button type="submit" class="btn btn-primary-custom btn-sm w-100" title="Filtrar"><i class="bi bi-funnel-fill"></i></button>
+          <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom btn-sm" title="Limpar"><i class="bi bi-x-lg"></i></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabela de Movimentações -->
+  <div class="saas-card">
+    <div class="table-responsive">
+      <table class="custom-table mb-0">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th class="text-end">Valor (R$)</th>
+            <th class="text-center">Status</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr>
+            <td class="text-main text-nowrap"><i class="bi bi-calendar3 me-1"></i>{{ t.date|date:"d/m/Y" }}</td>
+            <td>
+              {% if t.is_income %}
+              <span class="badge badge-income"><i class="bi bi-arrow-down-left me-1"></i>Receita</span>
+              {% else %}
+              <span class="badge badge-expense"><i class="bi bi-arrow-up-right me-1"></i>Despesa</span>
+              {% endif %}
+            </td>
+            <td class="fw-semibold">
+              {{ t.description }}
+              {% if t.notes %}
+              <i class="bi bi-chat-left-text text-main ms-1 small" title="{{ t.notes }}"></i>
+              {% endif %}
+            </td>
+            <td>
+              <span class="category-badge" style="background-color: {{ t.category.color_hex }}15; color: {{ t.category.color_hex }};">
+                <i class="bi {{ t.category.icon }}"></i> {{ t.category.name }}
+              </span>
+            </td>
+            <td class="text-end fw-bold tabular-nums text-nowrap {% if t.is_income %}text-success{% else %}text-danger{% endif %}">
+              {% if t.is_income %}+{% else %}-{% endif %} R$ {{ t.amount|floatformat:2|intcomma }}
+            </td>
+            <td class="text-center">
+              {% if t.status == 'COMPLETED' %}
+              <span class="badge bg-success-subtle text-success border border-success-subtle">Concluída</span>
+              {% else %}
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pendente</span>
+              {% endif %}
+            </td>
+            <td class="text-end text-nowrap">
+              <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-sm btn-link text-secondary p-1" title="Editar"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'finance:transaction_delete' t.pk %}" class="btn btn-sm btn-link text-danger p-1" title="Excluir"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-5 text-main">
+              <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
+              Nenhuma movimentação encontrada com os filtros selecionados.<br>
+              <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm mt-3">
+                <i class="bi bi-plus-lg"></i> Adicionar Nova Movimentação
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    {% if transactions.has_other_pages %}
+    <div class="saas-card-header bg-light bg-opacity-25 d-flex justify-content-between align-items-center">
+      <span class="text-main small">Página {{ transactions.number }} de {{ transactions.paginator.num_pages }}</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if transactions.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ transactions.previous_page_number }}">Anterior</a></li>
+          {% endif %}
+          {% for p in transactions.paginator.page_range %}
+            {% if p == transactions.number %}
+            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+            {% elif p > transactions.number|add:"-3" and p < transactions.number|add:"3" %}
+            <li class="page-item"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if transactions.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ transactions.next_page_number }}">Próxima</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

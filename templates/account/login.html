@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrar na Conta — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 460px;">
+  
+  <div class="text-center mb-4">
+    <div class="navbar-brand-icon mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.6rem;">
+      <i class="bi bi-wallet-fill"></i>
+    </div>
+    <h2 class="h3 fw-bold text-main">Bem-vindo de volta!</h2>
+    <p class="text-main">Acesse seu painel financeiro e acompanhe sua evolução.</p>
+  </div>
+
+  <div class="saas-card shadow-sm">
+    <div class="saas-card-body p-4">
+
+      <!-- Formulário de Login -->
+      <form method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 small border-0 rounded-3">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small" for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" name="login" class="form-control" placeholder="seu@email.com" required autocomplete="email">
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label fw-semibold small mb-0" for="loginPassword">Senha</label>
+            <a href="{% url 'account_reset_password' %}" class="small text-decoration-none text-primary">Esqueceu a senha?</a>
+          </div>
+          <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div class="mb-4 form-check">
+          <input type="checkbox" name="remember" class="form-check-input" id="rememberMe">
+          <label class="form-check-label small" for="rememberMe">Lembrar-me neste dispositivo</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary-custom w-100 py-2 justify-content-center">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar na Plataforma
+        </button>
+      </form>
+
+    </div>
+    <div class="saas-card-header text-center py-3" style="background: var(--bg-app);">
+      <span class="small text-main">Ainda não tem conta? <a href="{% url 'account_signup' %}" class="text-primary fw-semibold text-decoration-none">Cadastre-se grátis</a></span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Excluir Movimentação — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 540px;">
+  
+  <div class="saas-card border-danger border-opacity-50 shadow-lg">
+    <div class="saas-card-body p-4 text-center">
+      
+      <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+      </div>
+
+      <h2 class="h4 fw-bold text-danger mb-2">Excluir Movimentação</h2>
+      <p class="text-main mb-4">Esta ação removerá o registro do seu extrato e recalculará seus saldos e métricas.</p>
+
+      <!-- Detalhes do Item -->
+      <div class="bg-light p-3 rounded-3 text-start mb-4 border">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-main small">Descrição:</span>
+          <span class="fw-bold text-main">{{ transaction.description }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-main small">Categoria:</span>
+          <span class="fw-semibold text-main">{{ transaction.category.name }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-main small">Data:</span>
+          <span class="text-main">{{ transaction.date|date:"d/m/Y" }}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-main small">Valor:</span>
+          <span class="fw-bold {% if transaction.is_income %}text-success{% else %}text-danger{% endif %}">
+            {% if transaction.is_income %}+{% else %}-{% endif %} R$ {{ transaction.amount|floatformat:2|intcomma }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Trava de Segurança Caps Lock DELETAR -->
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="safeguard-box text-start mb-4">
+          <label class="form-label fw-bold small text-danger mb-1">
+            <i class="bi bi-shield-lock-fill me-1"></i> TRAVA DE SEGURANÇA:
+          </label>
+          <p class="small mb-2 text-danger opacity-75">
+            Para confirmar, digite exatamente a palavra <strong class="text-dark">DELETAR</strong> em letras maiúsculas no campo abaixo:
+          </p>
+          <input type="text" name="confirmation" id="deleteConfirmationInput" class="form-control safeguard-input" placeholder="DIGITE: DELETAR" autocomplete="off" required>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center">
+          <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom px-4">Cancelar</a>
+          <button type="submit" id="btnConfirmDelete" class="btn btn-secondary px-4 fw-bold" disabled>
+            <i class="bi bi-trash-fill me-1"></i> Confirmar Exclusão
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

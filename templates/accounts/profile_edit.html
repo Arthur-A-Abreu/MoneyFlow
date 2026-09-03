@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Perfil — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 650px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">Editar Perfil & Preferências</h1>
+      <p class="text-main mb-0">Atualize seus dados, moeda, tema e metas de economia.</p>
+    </div>
+    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-custom btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+  </div>
+
+  <div class="saas-card">
+    <div class="saas-card-body p-4">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h5 class="fw-bold mb-3 text-main">Dados Pessoais</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Primeiro Nome</label>
+            {{ user_form.first_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Sobrenome</label>
+            {{ user_form.last_name }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">E-mail</label>
+            {{ user_form.email }}
+          </div>
+        </div>
+
+        <h5 class="fw-bold mb-3 text-main pt-3 border-top">Preferências do Sistema</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Moeda</label>
+            {{ profile_form.currency }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Tema Preferido</label>
+            {{ profile_form.theme_preference }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">Meta de Economia Mensal (R$)</label>
+            {{ profile_form.monthly_savings_target }}
+            <span class="text-main small">Usada para calcular o progresso no Painel de Insights.</span>
+          </div>
+          <div class="col-12">
+            <div class="form-check p-3 bg-light rounded border">
+              {{ profile_form.receive_monthly_email_report }}
+              <label class="form-check-label fw-semibold text-main ms-2" for="{{ profile_form.receive_monthly_email_report.id_for_label }}">
+                <i class="bi bi-envelope-paper-fill text-primary me-1"></i> Receber relatório mensal consolidado em PDF por e-mail
+              </label>
+              <div class="text-main small ms-4">Enviaremos automaticamente todo final de mês um resumo do seu extrato e saldo.</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'accounts:profile' %}" class="btn btn-outline-custom">Cancelar</a>
+          <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-check-lg"></i> Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 680px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">{{ title }}</h1>
+      <p class="text-main mb-0">Preencha os detalhes da sua movimentação financeira.</p>
+    </div>
+    <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+  </div>
+
+  <div class="saas-card">
+    <div class="saas-card-body p-4">
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="row g-3">
+          <!-- Tipo de Movimentação -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Tipo <span class="text-danger">*</span></label>
+            {{ form.transaction_type }}
+            {% if form.transaction_type.errors %}
+            <div class="text-danger small mt-1">{{ form.transaction_type.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Categoria -->
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold text-main mb-0">Categoria <span class="text-danger">*</span></label>
+              <a href="{% url 'finance:category_create' %}" class="small text-decoration-none text-primary"
+                target="_blank">+ Nova</a>
+            </div>
+            {{ form.category }}
+            {% if form.category.errors %}
+            <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Descrição -->
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">Descrição <span class="text-danger">*</span></label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Valor -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Valor ({{ user.profile.currency_symbol|default:'R$' }})
+              <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text fw-bold text-main">{{ user.profile.currency_symbol|default:'R$' }}</span>
+              {{ form.amount }}
+            </div>
+            {% if form.amount.errors %}
+            <div class="text-danger small mt-1">{{ form.amount.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Data -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Data <span class="text-danger">*</span></label>
+            {{ form.date }}
+            {% if form.date.errors %}
+            <div class="text-danger small mt-1">{{ form.date.errors }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Status -->
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">Status</label>
+            {{ form.status }}
+          </div>
+
+          <!-- Observações -->
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">Observações (Opcional)</label>
+            {{ form.notes }}
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom">Cancelar</a>
+          <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-check-lg"></i> Salvar Movimentação
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

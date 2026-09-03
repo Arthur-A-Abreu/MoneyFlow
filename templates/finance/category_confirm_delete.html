@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Categoria — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  
+  <div class="saas-card shadow-lg" style="max-width: 480px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.3);">
+    <div class="saas-card-body p-4 p-md-5 text-center position-relative overflow-hidden">
+      
+      <!-- Fundo de alerta sutil -->
+      <div class="position-absolute top-0 start-0 w-100 bg-danger opacity-10" style="height: 6px;"></div>
+
+      <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-4" style="width: 72px; height: 72px; box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.05);">
+        <i class="bi bi-trash3-fill fs-2"></i>
+      </div>
+
+      <h2 class="h4 fw-bold text-main mb-2">Excluir Categoria?</h2>
+      <p class="text-main mb-4">Tem certeza que deseja remover <strong>"{{ category.name }}"</strong>?</p>
+
+      {% if category.transaction_count > 0 %}
+      <div class="alert alert-warning text-start small mb-4 d-flex align-items-start gap-2 shadow-sm border-0">
+        <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i> 
+        <div>
+          <strong>Atenção:</strong> Esta categoria possui <strong>{{ category.transaction_count }}</strong> movimentações. Para manter o histórico, ela será arquivada/desativada e não apagada definitivamente.
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="POST" class="mt-2">
+        {% csrf_token %}
+
+        <div class="text-start mb-4 bg-light rounded p-3 border" style="border-style: dashed !important;">
+          <label class="form-label fw-bold small text-danger mb-2 d-block text-center text-md-start">
+            <i class="bi bi-shield-exclamation me-1"></i> TRAVA DE SEGURANÇA
+          </label>
+          <input type="text" name="confirmation" id="deleteConfirmationInput" class="form-control text-center fw-bold" placeholder="Digite DELETAR para confirmar" autocomplete="off" required style="letter-spacing: 2px;">
+        </div>
+
+        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center mt-4">
+          <a href="{% url 'finance:category_list' %}" class="btn btn-outline-custom w-100">
+            Cancelar
+          </a>
+          <button type="submit" id="btnConfirmDelete" class="btn btn-danger w-100 fw-bold" disabled>
+            Sim, Excluir
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

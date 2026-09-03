@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 580px;">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">{{ title }}</h1>
+      <p class="text-main mb-0">Defina o nome, a cor visual e o ícone da categoria.</p>
+    </div>
+    <a href="{% url 'finance:category_list' %}" class="btn btn-outline-custom btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+  </div>
+
+  <div class="saas-card">
+    <div class="saas-card-body p-4">
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main">Nome da Categoria <span class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Tipo de Escopo</label>
+            {{ form.type_scope }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold text-main">Cor Visual (HEX)</label>
+            <div class="d-flex gap-2 align-items-center">
+              <input type="color" id="colorPickerUI" class="form-control form-control-color" value="{{ form.color_hex.value|default:'#6B7280' }}" title="Escolha a cor">
+              {{ form.color_hex }}
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold text-main mb-1">Ícone Visual</label>
+            <p class="text-main small mb-2">Clique em um ícone abaixo para selecioná-arlo para a categoria.</p>
+            
+            <!-- Hidden input for the actual form submission -->
+            <input type="hidden" name="icon" id="id_icon" value="{{ form.icon.value|default:'bi-tag' }}">
+            
+            <!-- Visual Icon Display -->
+            <div class="d-flex align-items-center gap-3 mb-3 p-3 bg-light rounded border">
+              <div class="rounded-circle d-flex align-items-center justify-content-center bg-white shadow-sm" style="width: 48px; height: 48px; font-size: 1.5rem;" id="selectedIconDisplay">
+                <i class="bi {{ form.icon.value|default:'bi-tag' }} text-primary"></i>
+              </div>
+              <div>
+                <strong class="d-block text-main">Ícone Selecionado</strong>
+                <span class="small text-main" id="selectedIconName">{{ form.icon.value|default:'bi-tag' }}</span>
+              </div>
+            </div>
+
+            <!-- Icon Picker Grid -->
+            <div class="icon-picker-container p-3 border rounded bg-surface" style="max-height: 200px; overflow-y: auto;">
+              <div class="row g-2" id="iconGrid">
+                <!-- Ícones comuns para finanças -->
+                {% with icons="bi-tag bi-wallet2 bi-cart-check bi-car-front bi-house bi-bag bi-basket bi-box-seam bi-briefcase bi-building bi-bus-front bi-cash-coin bi-credit-card bi-cup-hot bi-emoji-smile bi-file-earmark-text bi-film bi-fuel-pump bi-gift bi-globe bi-heart-pulse bi-lightning bi-music-note bi-pc-display bi-pen bi-phone bi-piggy-bank bi-receipt bi-scissors bi-shop bi-telephone bi-tools bi-train-front bi-airplane bi-bandaid bi-book bi-calendar-event bi-camera bi-capsule bi-cart bi-controller bi-display bi-envelope bi-gear bi-journal-medical bi-laptop bi-mic bi-scissors bi-smartwatch bi-suit-heart bi-tv bi-umbrella bi-water" %}
+                {% for i in icons.split %}
+                <div class="col-2 col-sm-2 text-center">
+                  <button type="button" class="btn btn-outline-secondary w-100 p-2 icon-select-btn {% if form.icon.value == i or not form.icon.value and i == 'bi-tag' %}active{% endif %}" data-icon="{{ i }}" title="{{ i }}">
+                    <i class="bi {{ i }} fs-5"></i>
+                  </button>
+                </div>
+                {% endfor %}
+                {% endwith %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'finance:category_list' %}" class="btn btn-outline-custom">Cancelar</a>
+          <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-check-lg"></i> Salvar Categoria
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const iconInput = document.getElementById('id_icon');
+    const selectedIconDisplay = document.getElementById('selectedIconDisplay');
+    const selectedIconName = document.getElementById('selectedIconName');
+    const iconBtns = document.querySelectorAll('.icon-select-btn');
+    const colorPickerUI = document.getElementById('colorPickerUI');
+    const colorInput = document.getElementById('id_color_hex');
+
+    // Color picker sync
+    if (colorPickerUI && colorInput) {
+      colorPickerUI.addEventListener('input', function(e) {
+        colorInput.value = e.target.value.toUpperCase();
+      });
+      colorInput.addEventListener('input', function(e) {
+        colorPickerUI.value = e.target.value;
+      });
+    }
+
+    // Icon picker logic
+    iconBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const iconClass = this.getAttribute('data-icon');
+        
+        // Update hidden input
+        iconInput.value = iconClass;
+        
+        // Update display
+        selectedIconDisplay.innerHTML = `<i class="bi ${iconClass} text-primary"></i>`;
+        selectedIconName.textContent = iconClass;
+        
+        // Update active states
+        iconBtns.forEach(b => b.classList.remove('active', 'btn-primary'));
+        iconBtns.forEach(b => b.classList.add('btn-outline-secondary'));
+        
+        this.classList.remove('btn-outline-secondary');
+        this.classList.add('active', 'btn-primary');
+      });
+    });
+  });
+</script>
+{% endblock %}

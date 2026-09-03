@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Central de Insights Inteligentes — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h1 class="h3 fw-bold text-main mb-0">Insights & Inteligência Financeira</h1>
+        <span class="badge bg-warning text-dark"><i class="bi bi-stars"></i> IA Engine</span>
+      </div>
+      <p class="text-main mb-0">Análises automáticas, variações mês a mês (MoM), detecção de anomalias e projeções.</p>
+    </div>
+
+    <!-- Navegador de Período -->
+    <form method="GET" id="periodSelectForm" class="d-flex align-items-center gap-2">
+      <div class="month-navigator">
+        <i class="bi bi-calendar-event text-primary ms-2"></i>
+        <select name="month" class="form-select-sm">
+          {% for num, name in months %}
+          <option value="{{ num }}" {% if num == selected_month %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+        <select name="year" class="form-select-sm">
+          {% for yr in years %}
+          <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>{{ yr }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <!-- Cards de Insights em Destaque -->
+  <div class="row g-3 mb-4">
+    {% for insight in insights %}
+    <div class="col-md-6 col-lg-4">
+      <div class="saas-card h-100 p-4 d-flex flex-column justify-content-between">
+        <div>
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; {% if insight.type == 'success' %}background: #ECFDF5; color: #059669;{% elif insight.type == 'danger' %}background: #FEF2F2; color: #DC2626;{% elif insight.type == 'warning' %}background: #FFFBEB; color: #D97706;{% else %}background: #EEF2FF; color: #4F46E5;{% endif %}">
+              <i class="bi {{ insight.icon }} fs-4"></i>
+            </div>
+            <span class="badge {% if insight.type == 'success' %}badge-income{% elif insight.type == 'danger' %}badge-expense{% elif insight.type == 'warning' %}badge-warning{% else %}bg-primary-subtle text-primary{% endif %}">
+              Diagnóstico Automático
+            </span>
+          </div>
+          <p class="text-main fw-semibold fs-6 mb-0" style="line-height: 1.5;">
+            {{ insight.message }}
+          </p>
+        </div>
+        <div class="border-top pt-3 mt-3 text-main small d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-clock-history me-1"></i> Atualizado em tempo real</span>
+          <i class="bi bi-check2-all text-success"></i>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+      <i class="bi bi-lightbulb fs-1 text-secondary opacity-50 d-block mb-3"></i>
+      <h5>Ainda não há movimentações suficientes</h5>
+      <p class="text-main">Cadastre suas receitas e despesas para que o motor estatístico gere análises personalizadas.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

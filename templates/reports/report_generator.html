@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Gerador de Relatórios — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">Exportação & Relatórios</h1>
+      <p class="text-main mb-0">Exporte seu extrato e consolidados financeiros em PDF, Planilha Excel (.xlsx) ou CSV.</p>
+    </div>
+  </div>
+
+  <!-- Painel de Configuração de Exportação -->
+  <div class="saas-card mb-4">
+    <div class="saas-card-body p-4">
+      <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-main">Data Inicial</label>
+          <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-main">Data Final</label>
+          <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-main">Categoria</label>
+          <select name="category" class="form-select form-select-sm">
+            <option value="">Todas</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-main">Tipo</label>
+          <select name="type" class="form-select form-select-sm">
+            <option value="">Todos (Receitas e Despesas)</option>
+            <option value="INCOME" {% if transaction_type == 'INCOME' %}selected{% endif %}>Apenas Receitas (+)</option>
+            <option value="EXPENSE" {% if transaction_type == 'EXPENSE' %}selected{% endif %}>Apenas Despesas (-)</option>
+          </select>
+        </div>
+
+        <div class="col-12 d-flex flex-wrap gap-2 pt-2 border-top">
+          <button type="submit" class="btn btn-outline-custom btn-sm">
+            <i class="bi bi-funnel"></i> Aplicar Filtros no Preview
+          </button>
+          
+          <button type="submit" name="export" value="pdf" class="btn btn-primary-custom btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Baixar Relatório PDF
+          </button>
+
+          <button type="submit" name="export" value="excel" class="btn btn-outline-custom btn-sm text-success">
+            <i class="bi bi-file-earmark-excel"></i> Baixar Planilha Excel (.xlsx)
+          </button>
+
+          <button type="submit" name="export" value="csv" class="btn btn-outline-custom btn-sm">
+            <i class="bi bi-filetype-csv"></i> Baixar CSV
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cards de Resumo do Período -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="metric-card metric-card-income">
+        <span class="metric-label">Total Receitas</span>
+        <div class="metric-value text-success tabular-nums">+ R$ {{ total_income|floatformat:2|intcomma }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card metric-card-expense">
+        <span class="metric-label">Total Despesas</span>
+        <div class="metric-value text-danger tabular-nums">- R$ {{ total_expense|floatformat:2|intcomma }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="metric-card metric-card-balance">
+        <span class="metric-label">Saldo do Período</span>
+        <div class="metric-value text-primary tabular-nums">R$ {{ balance|floatformat:2|intcomma }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prévia dos Dados Filtrados -->
+  <div class="saas-card">
+    <div class="saas-card-header">
+      <h6 class="fw-bold mb-0 text-main"><i class="bi bi-table me-2"></i>Prévia das Movimentações ({{ transactions|length }} registros)</h6>
+    </div>
+    <div class="table-responsive">
+      <table class="custom-table mb-0">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th class="text-end">Valor</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr>
+            <td class="text-main">{{ t.date|date:"d/m/Y" }}</td>
+            <td>
+              {% if t.is_income %}<span class="badge badge-income">Receita</span>{% else %}<span class="badge badge-expense">Despesa</span>{% endif %}
+            </td>
+            <td>
+              <span class="category-badge" style="background-color: {{ t.category.color_hex }}15; color: {{ t.category.color_hex }};">
+                <i class="bi {{ t.category.icon }}"></i> {{ t.category.name }}
+              </span>
+            </td>
+            <td class="fw-semibold">{{ t.description }}</td>
+            <td class="text-end fw-bold tabular-nums {% if t.is_income %}text-success{% else %}text-danger{% endif %}">
+              {% if t.is_income %}+{% else %}-{% endif %} R$ {{ t.amount|floatformat:2|intcomma }}
+            </td>
+            <td class="text-center">
+              {% if t.status == 'COMPLETED' %}<span class="badge bg-success-subtle text-success">Concluída</span>{% else %}<span class="badge bg-warning-subtle text-warning">Pendente</span>{% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-main">Nenhum registro encontrado para os filtros selecionados.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

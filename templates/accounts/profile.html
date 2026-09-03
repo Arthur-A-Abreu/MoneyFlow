@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Meu Perfil — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 650px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">Meu Perfil</h1>
+      <p class="text-main mb-0">Informações da sua conta e preferências pessoais.</p>
+    </div>
+    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary-custom btn-sm">
+      <i class="bi bi-pencil me-1"></i> Editar Perfil
+    </a>
+  </div>
+
+  <div class="saas-card mb-4">
+    <div class="saas-card-body p-4">
+      <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
+          {{ user.username|first|upper }}
+        </div>
+        <div>
+          <h4 class="fw-bold text-main mb-0">{{ user.get_full_name|default:user.username }}</h4>
+          <span class="text-main">{{ user.email }}</span>
+          <div class="mt-1">
+            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-shield-check"></i> Conta Ativa & Segura</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="text-main small">Nome de Usuário</label>
+          <p class="fw-semibold text-main mb-0">@{{ user.username }}</p>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-main small">Moeda Principal</label>
+          <p class="fw-semibold text-main mb-0">{{ user.profile.get_currency_display }}</p>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-main small">Tema de Interface</label>
+          <p class="fw-semibold text-main mb-0">{{ user.profile.get_theme_preference_display }}</p>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-main small">Meta de Economia Mensal</label>
+          <p class="fw-semibold text-main mb-0">R$ {{ user.profile.monthly_savings_target|floatformat:2|intcomma }}</p>
+        </div>
+        <div class="col-12">
+          <label class="text-main small">Relatório Mensal Automático</label>
+          <p class="fw-semibold text-main mb-0">
+            {% if user.profile.receive_monthly_email_report %}
+            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Ativado — Receberá PDF todo fim de mês</span>
+            {% else %}
+            <span class="text-secondary"><i class="bi bi-x-circle-fill"></i> Desativado</span>
+            {% endif %}
+          </p>
+        </div>
+        <div class="col-12">
+          <label class="text-main small">Membro Desde</label>
+          <p class="text-main mb-0">{{ user.date_joined|date:"d de F de Y" }}</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

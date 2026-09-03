@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+  
+  <!-- Top Header com Título e Seletor de Período -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-main mb-1">Painel Financeiro</h1>
+      <p class="text-main mb-0">Visão consolidada das suas movimentações e indicadores inteligentes.</p>
+    </div>
+
+    <!-- Navegador de Mês/Ano -->
+    <form method="GET" action="{% url 'dashboard:home' %}" id="periodSelectForm" class="d-flex align-items-center gap-2">
+      <div class="month-navigator">
+        <i class="bi bi-calendar-event text-primary ms-2"></i>
+        <select name="month" class="form-select-sm">
+          {% for num, name in months %}
+          <option value="{{ num }}" {% if num == selected_month %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+        <select name="year" class="form-select-sm">
+          {% for yr in years %}
+          <option value="{{ yr|stringformat:"d" }}" {% if yr == selected_year %}selected{% endif %}>{{ yr|stringformat:"d" }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm">
+        <i class="bi bi-plus-circle"></i> Novo Lançamento
+      </a>
+    </form>
+  </div>
+
+  <!-- Layout Principal: 75% Conteúdo + 25% Cards Laterais -->
+  <div class="row g-4">
+    
+    <!-- ÁREA PRINCIPAL (Esquerda: 8 colunas no desktop) -->
+    <div class="col-lg-8 col-xl-9">
+      
+      <!-- Seção de Insights Inteligentes -->
+      {% if insights %}
+      <div class="saas-card mb-4 border-primary border-opacity-25">
+        <div class="saas-card-header bg-light bg-opacity-50">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
+            <h6 class="fw-bold mb-0 text-main">Diagnóstico & Insights Inteligentes</h6>
+          </div>
+          <a href="{% url 'insights:index' %}?month={{ selected_month }}&year={{ selected_year }}" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold">
+            Ver Análise Completa <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+        <div class="saas-card-body pb-1">
+          <div class="row g-2">
+            {% for insight in insights|slice:":3" %}
+            <div class="col-12">
+              <div class="insight-card insight-card-{{ insight.type }}">
+                <i class="bi {{ insight.icon }} insight-icon"></i>
+                <div class="flex-grow-1 fw-medium">{{ insight.message }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Grid de Gráficos -->
+      <div class="row g-4 mb-4">
+        <!-- Gráfico 1: Despesas por Categoria -->
+        <div class="col-md-6">
+          <div class="saas-card h-100">
+            <div class="saas-card-header">
+              <h6 class="fw-bold mb-0 text-main"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Despesas por Categoria</h6>
+            </div>
+            <div class="saas-card-body d-flex align-items-center justify-content-center" style="min-height: 280px;">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: Receitas vs Despesas (Últimos 6 meses) -->
+        <div class="col-md-6">
+          <div class="saas-card h-100">
+            <div class="saas-card-header">
+              <h6 class="fw-bold mb-0 text-main"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Receitas x Despesas (6 meses)</h6>
+            </div>
+            <div class="saas-card-body" style="min-height: 280px;">
+              <canvas id="comparisonChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico 3: Evolução do Saldo -->
+        <div class="col-12">
+          <div class="saas-card">
+            <div class="saas-card-header">
+              <h6 class="fw-bold mb-0 text-main"><i class="bi bi-graph-up-arrow text-success me-2"></i>Evolução do Saldo Acumulado</h6>
+            </div>
+            <div class="saas-card-body" style="height: 250px;">
+              <canvas id="evolutionChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Últimas Movimentações -->
+      <div class="saas-card">
+        <div class="saas-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-secondary"></i>
+            <h6 class="fw-bold mb-0 text-main">Últimas Movimentações deste Mês</h6>
+          </div>
+          <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom btn-sm">
+            Ver Extrato Completo <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table mb-0">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th class="text-end">Valor</th>
+                <th class="text-center">Status</th>
+                <th class="text-end">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in recent_transactions %}
+              <tr>
+                <td class="text-main text-nowrap"><i class="bi bi-calendar3 me-1"></i>{{ t.date|date:"d/m/Y" }}</td>
+                <td class="fw-semibold">{{ t.description }}</td>
+                <td>
+                  <span class="category-badge" style="background-color: {{ t.category.color_hex }}15; color: {{ t.category.color_hex }};">
+                    <i class="bi {{ t.category.icon }}"></i> {{ t.category.name }}
+                  </span>
+                </td>
+                <td class="text-end fw-bold tabular-nums text-nowrap {% if t.is_income %}text-success{% else %}text-danger{% endif %}">
+                  {% if t.is_income %}+{% else %}-{% endif %} R$ {{ t.amount|floatformat:2|intcomma }}
+                </td>
+                <td class="text-center">
+                  {% if t.status == 'COMPLETED' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">Concluída</span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pendente</span>
+                  {% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                  <a href="{% url 'finance:transaction_edit' t.pk %}" class="btn btn-sm btn-link text-secondary p-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'finance:transaction_delete' t.pk %}" class="btn btn-sm btn-link text-danger p-1" title="Excluir"><i class="bi bi-trash"></i></a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-main">
+                  <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                  Nenhuma movimentação registrada para este mês.<br>
+                  <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm mt-2">
+                    <i class="bi bi-plus-lg"></i> Adicionar Primeira Movimentação
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR DE CARDS LATERAIS (Direita: 4 colunas no desktop) -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="d-flex flex-column gap-3">
+        
+        <!-- Card 1: Saldo do Mês -->
+        <div class="metric-card metric-card-balance">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="metric-label">Saldo do Mês</span>
+            <i class="bi bi-wallet2 fs-4 text-primary opacity-50"></i>
+          </div>
+          <div class="metric-value tabular-nums {% if balance >= 0 %}text-primary{% else %}text-danger{% endif %}">
+            R$ {{ balance|floatformat:2|intcomma }}
+          </div>
+          {% if balance_variation != 0 %}
+          <div class="metric-badge {% if balance_variation > 0 %}badge-income{% else %}badge-expense{% endif %}">
+            <i class="bi {% if balance_variation > 0 %}bi-arrow-up-short{% else %}bi-arrow-down-short{% endif %}"></i>
+            {{ balance_variation }}% vs mês ant.
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Card 2: Total de Receitas -->
+        <div class="metric-card metric-card-income">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="metric-label">Total Receitas</span>
+            <i class="bi bi-arrow-down-left-circle fs-4 text-success opacity-50"></i>
+          </div>
+          <div class="metric-value tabular-nums text-success">
+            + R$ {{ total_income|floatformat:2|intcomma }}
+          </div>
+          {% if income_variation != 0 %}
+          <div class="metric-badge {% if income_variation > 0 %}badge-income{% else %}badge-expense{% endif %}">
+            <i class="bi {% if income_variation > 0 %}bi-arrow-up-short{% else %}bi-arrow-down-short{% endif %}"></i>
+            {{ income_variation }}% vs mês ant.
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Card 3: Total de Despesas -->
+        <div class="metric-card metric-card-expense">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="metric-label">Total Despesas</span>
+            <i class="bi bi-arrow-up-right-circle fs-4 text-danger opacity-50"></i>
+          </div>
+          <div class="metric-value tabular-nums text-danger">
+            - R$ {{ total_expense|floatformat:2|intcomma }}
+          </div>
+          {% if expense_variation != 0 %}
+          <div class="metric-badge {% if expense_variation < 0 %}badge-income{% else %}badge-expense{% endif %}">
+            <i class="bi {% if expense_variation > 0 %}bi-arrow-up-short{% else %}bi-arrow-down-short{% endif %}"></i>
+            {{ expense_variation }}% vs mês ant.
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Card 4: Taxa de Economia -->
+        <div class="metric-card metric-card-savings">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="metric-label">Taxa de Poupança</span>
+            <i class="bi bi-piggy-bank fs-4 text-warning opacity-50"></i>
+          </div>
+          <div class="metric-value tabular-nums text-main">
+            {{ savings_rate }}%
+          </div>
+          <div class="progress mt-2" style="height: 6px;">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ savings_rate|default:0 }}%" aria-valuenow="{{ savings_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+
+        <!-- Card de Exportação Rápida -->
+        <div class="saas-card p-3 text-center">
+          <i class="bi bi-file-earmark-arrow-down fs-2 text-primary d-block mb-2"></i>
+          <h6 class="fw-bold mb-1">Exportar Período</h6>
+          <p class="text-main small mb-3">Baixe o relatório com gráficos e extrato completo.</p>
+          <div class="d-grid gap-2">
+            <a href="{% url 'reports:generator' %}?export=pdf" class="btn btn-outline-custom btn-sm">
+              <i class="bi bi-file-pdf text-danger me-1"></i> Baixar PDF
+            </a>
+            <a href="{% url 'reports:generator' %}?export=excel" class="btn btn-outline-custom btn-sm">
+              <i class="bi bi-file-excel text-success me-1"></i> Baixar Excel (.xlsx)
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Inicialização dos Gráficos com Chart.js
+  const categoryLabels = {{ category_labels|safe }};
+  const categoryData = {{ category_data|safe }};
+  const categoryColors = {{ category_colors|safe }};
+
+  const comparisonLabels = {{ comparison_labels|safe }};
+  const comparisonIncome = {{ comparison_income|safe }};
+  const comparisonExpense = {{ comparison_expense|safe }};
+
+  const balanceEvolution = {{ balance_evolution|safe }};
+
+  // 1. Gráfico de Rosca: Despesas por Categoria
+  const ctxCat = document.getElementById('categoryChart');
+  if (ctxCat && categoryData.length > 0) {
+    new Chart(ctxCat, {
+      type: 'doughnut',
+      data: {
+        labels: categoryLabels,
+        datasets: [{
+          data: categoryData,
+          backgroundColor: categoryColors.length > 0 ? categoryColors : ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+          borderWidth: 2,
+          borderColor: '#ffffff',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let val = context.raw || 0;
+                return ` ${context.label}: R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+  } else if (ctxCat) {
+    ctxCat.parentElement.innerHTML = '<div class="text-main text-center py-4"><i class="bi bi-pie-chart fs-3 d-block mb-1"></i>Sem despesas registradas neste mês.</div>';
+  }
+
+  // 2. Gráfico de Barras: Comparativo Mensal
+  const ctxComp = document.getElementById('comparisonChart');
+  if (ctxComp) {
+    new Chart(ctxComp, {
+      type: 'bar',
+      data: {
+        labels: comparisonLabels,
+        datasets: [
+          {
+            label: 'Receitas',
+            data: comparisonIncome,
+            backgroundColor: '#10B981',
+            borderRadius: 4,
+          },
+          {
+            label: 'Despesas',
+            data: comparisonExpense,
+            backgroundColor: '#EF4444',
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', size: 11 } } }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            ticks: {
+              callback: function(value) { return 'R$ ' + value.toLocaleString('pt-BR'); }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Gráfico de Linha: Evolução do Saldo
+  const ctxEvol = document.getElementById('evolutionChart');
+  if (ctxEvol) {
+    new Chart(ctxEvol, {
+      type: 'line',
+      data: {
+        labels: comparisonLabels,
+        datasets: [{
+          label: 'Saldo Acumulado',
+          data: balanceEvolution,
+          borderColor: '#4F46E5',
+          backgroundColor: 'rgba(79, 70, 229, 0.08)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: '#4F46E5',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            ticks: {
+              callback: function(value) { return 'R$ ' + value.toLocaleString('pt-BR'); }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

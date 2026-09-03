@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% load account %}
+
+{% block title %}Confirme seu E-mail — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 500px;">
+  <div class="saas-card text-center shadow-lg border-primary border-opacity-25">
+    <div class="saas-card-body p-4 p-md-5">
+      
+      <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-4" style="width: 70px; height: 70px;">
+        <i class="bi bi-envelope-check-fill fs-1"></i>
+      </div>
+
+      <h2 class="h4 fw-bold text-main mb-3">Confirmação de E-mail</h2>
+
+      {% if confirmation %}
+        {% user_display confirmation.email_address.user as user_display %}
+        
+        <p class="text-main mb-4">
+          Por favor, confirme que <strong><a href="mailto:{{ confirmation.email_address.email }}">{{ confirmation.email_address.email }}</a></strong> é um endereço de e-mail pertencente ao usuário <strong>{{ user_display }}</strong>.
+        </p>
+        
+        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i> Confirmar E-mail
+          </button>
+        </form>
+      {% else %}
+        {% url 'account_email' as email_url %}
+        
+        <div class="alert alert-danger mb-4">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i> Este link de confirmação de e-mail é inválido ou já expirou.
+        </div>
+        
+        <p class="text-main">
+          Por favor, emita um <a href="{{ email_url }}" class="text-primary fw-semibold text-decoration-none">novo pedido de confirmação</a> se o problema persistir.
+        </p>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

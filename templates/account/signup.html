@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar Conta — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 480px;">
+  
+  <div class="text-center mb-4">
+    <div class="navbar-brand-icon mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.6rem;">
+      <i class="bi bi-wallet-fill"></i>
+    </div>
+    <h2 class="h3 fw-bold text-main">Crie sua Conta Grátis</h2>
+    <p class="text-main">Comece a controlar sua vida financeira de forma profissional.</p>
+  </div>
+
+  <div class="saas-card shadow-sm">
+    <div class="saas-card-body p-4">
+
+      <!-- Formulário de Cadastro -->
+      <form method="POST" action="{% url 'account_signup' %}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 small border-0 rounded-3">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small" for="signupUsername">Nome de Usuário</label>
+          <input type="text" id="signupUsername" name="username" class="form-control" placeholder="ex: arthursilva" required autocomplete="username">
+          {% if form.username.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.username.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small" for="signupEmail">E-mail</label>
+          <input type="email" id="signupEmail" name="email" class="form-control" placeholder="seu@email.com" required autocomplete="email">
+          <span class="small mt-1 d-block" style="color: var(--text-subtle);">Enviaremos um link de confirmação para validar sua conta.</span>
+          {% if form.email.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.email.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small" for="signupPassword1">Senha</label>
+          <input type="password" id="signupPassword1" name="password1" class="form-control" placeholder="Mínimo de 8 caracteres" required autocomplete="new-password">
+          {% if form.password1.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.password1.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small" for="signupPassword2">Confirme a Senha</label>
+          <input type="password" id="signupPassword2" name="password2" class="form-control" placeholder="Repita a mesma senha" required autocomplete="new-password">
+          {% if form.password2.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.password2.errors }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary-custom w-100 py-2 justify-content-center">
+          <i class="bi bi-rocket-takeoff-fill"></i> Criar Minha Conta
+        </button>
+      </form>
+
+    </div>
+    <div class="saas-card-header text-center py-3" style="background: var(--bg-app);">
+      <span class="small text-main">Já possui uma conta? <a href="{% url 'account_login' %}" class="text-primary fw-semibold text-decoration-none">Faça Login</a></span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
