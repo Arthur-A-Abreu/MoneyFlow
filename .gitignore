@@ -1,8 +1,0 @@
-# Python & Virtualenv
-.venv/
-venv/
-.env
-db.sqlite3
-/staticfiles/
-.vscode/
-.gitignore
