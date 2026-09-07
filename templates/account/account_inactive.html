@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Conta Inativa — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 520px;">
+  <div class="saas-card text-center shadow-lg border-warning border-opacity-25">
+    <div class="saas-card-body p-4 p-md-5">
+      
+      <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center mb-4" style="width: 75px; height: 75px;">
+        <i class="bi bi-person-x-fill fs-1"></i>
+      </div>
+
+      <h2 class="h4 fw-bold text-main mb-3">Conta Inativa</h2>
+
+      <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-main mb-4 py-3">
+        <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5 align-middle"></i>
+        <span>Sua conta está desativada no momento e o acesso ao painel foi suspenso.</span>
+      </div>
+
+      <p class="text-main mb-4">
+        Por favor, entre em contato com o <strong>Administrador</strong> para verificar o status da sua conta e solicitar a reativação do seu acesso.
+      </p>
+
+      <div class="d-flex flex-column gap-2">
+        <a href="mailto:admin@moneyflow.com" class="btn btn-primary-custom w-100 py-2 fs-6">
+          <i class="bi bi-envelope-at-fill me-2"></i> Entrar em Contato com o Administrador
+        </a>
+        <a href="{% url 'account_login' %}" class="btn btn-outline-custom w-100 py-2 fs-6 mt-1">
+          <i class="bi bi-arrow-left me-2"></i> Voltar para a Tela de Login
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

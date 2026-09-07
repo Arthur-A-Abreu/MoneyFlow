@@ -4,19 +4,27 @@ Configuração completa do projeto com django-allauth, apps customizados,
 isolamento de dados por usuário e localização pt-BR.
 """
 
+import os
 from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
 
 # ==============================================================================
-# PATHS
+# PATHS & ENVIRONMENT
 # ==============================================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Carrega variáveis de ambiente do arquivo .env
+load_dotenv(BASE_DIR / '.env')
 
 # ==============================================================================
 # CORE SETTINGS
 # ==============================================================================
-SECRET_KEY = 'django-insecure-*xr8@i3d3ro!)^q93u$&kqjf-g0#hza3dk!^f*bai^xdga6+!%'
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-*xr8@i3d3ro!)^q93u$&kqjf-g0#hza3dk!^f*bai^xdga6+!%')
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+
+_allowed_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -80,26 +88,26 @@ TEMPLATES = [
 ]
 
 # ==============================================================================
-# DATABASE (SQLite para desenvolvimento, PostgreSQL para produção)
+# DATABASE (Neon PostgreSQL / Fallback para SQLite)
 # ==============================================================================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-# Para produção com PostgreSQL, descomente e configure:
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'controle_dinheiro',
-#         'USER': 'postgres',
-#         'PASSWORD': 'sua_senha_aqui',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # ==============================================================================
 # AUTH & CUSTOM USER MODEL
