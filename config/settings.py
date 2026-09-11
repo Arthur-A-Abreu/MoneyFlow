@@ -23,8 +23,17 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-*xr8@i3d3ro!)^q93u$&kqjf-g0#hza3dk!^f*bai^xdga6+!%')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
-_allowed_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
-ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
+_allowed_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.vercel.app')
+
+# Transforma a string em lista e limpa espaços
+ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(',') if host.strip()]
+
+# Garante que o wildcard do Vercel e os hosts locais estejam presentes
+default_hosts = ['.vercel.app', 'localhost', '127.0.0.1']
+for host in default_hosts:
+    if host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+
 
 # ==============================================================================
 # APPLICATION DEFINITION
