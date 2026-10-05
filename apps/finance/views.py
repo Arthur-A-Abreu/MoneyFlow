@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from apps.finance.models import Transaction, Category
 from apps.finance.forms import TransactionForm, CategoryForm
+from apps.finance.services import process_statement_with_gemini
 
 
 
@@ -216,5 +217,123 @@ def category_delete(request, pk):
     return render(request, 'finance/category_confirm_delete.html', {
         'category': category,
     })
+
+
+# ==============================================================================
+# LEITURA INTELIGENTE DE EXTRATOS / FATURAS COM IA (GEMINI)
+# ==============================================================================
+
+
+@login_required
+def ai_import_page(request):
+    """Página interativa para upload e revisão de extratos com IA."""
+    categories = Category.objects.filter(user=request.user, is_active=True)
+    return render(request, 'finance/import_ai.html', {
+        'categories': categories,
+    })
+
+
+@login_required
+@require_POST
+def ai_process_statement(request):
+    """API endpoint para receber o arquivo enviado via AJAX e extrair com a API do Gemini."""
+    if 'file' not in request.FILES:
+        return JsonResponse({'status': 'error', 'message': 'Nenhum arquivo foi enviado.'}, status=400)
+
+    uploaded_file = request.FILES['file']
+    mime_type = uploaded_file.content_type
+
+    allowed_types = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+    if mime_type not in allowed_types:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Formato não suportado. Envie um arquivo PDF ou uma Imagem (PNG, JPG, WEBP).'
+        }, status=400)
+
+    try:
+        file_bytes = uploaded_file.read()
+        user_categories = list(Category.objects.filter(user=request.user, is_active=True).values_list('name', flat=True))
+
+        extracted_data = process_statement_with_gemini(file_bytes, mime_type, user_categories)
+
+        return JsonResponse({
+            'status': 'success',
+            'transacoes': extracted_data.get('transacoes', []),
+            'categories': user_categories
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def ai_bulk_save(request):
+    """API endpoint para persistir as transações em lote usando bulk_create."""
+    try:
+        data = json.loads(request.body)
+        raw_transactions = data.get('transacoes', [])
+
+        if not raw_transactions:
+            return JsonResponse({'status': 'error', 'message': 'Nenhuma movimentação enviada para salvar.'}, status=400)
+
+        # Carrega categorias existentes do usuário
+        user_categories = {
+            cat.name.lower().strip(): cat
+            for cat in Category.objects.filter(user=request.user, is_active=True)
+        }
+
+        transactions_to_create = []
+
+        for item in raw_transactions:
+            cat_name = str(item.get('categoria', '')).lower().strip()
+            category_obj = user_categories.get(cat_name)
+
+            if not category_obj:
+                original_cat_name = str(item.get('categoria', 'Outros')).strip().capitalize() or 'Outros'
+                type_scope = 'INCOME' if item.get('tipo') == 'receita' else 'EXPENSE'
+                category_obj, _ = Category.objects.get_or_create(
+                    user=request.user,
+                    name=original_cat_name,
+                    defaults={
+                        'type_scope': type_scope,
+                        'color_hex': '#4F46E5',
+                        'icon': 'bi-tag-fill'
+                    }
+                )
+                user_categories[original_cat_name.lower()] = category_obj
+
+            tipo = 'INCOME' if item.get('tipo') == 'receita' else 'EXPENSE'
+
+            try:
+                val = Decimal(str(item.get('valor', '0')).replace(',', '.'))
+                if val < 0:
+                    val = abs(val)
+            except Exception:
+                val = Decimal('0.00')
+
+            transactions_to_create.append(Transaction(
+                user=request.user,
+                category=category_obj,
+                description=str(item.get('descricao', 'Sem descrição'))[:255],
+                amount=val,
+                transaction_type=tipo,
+                date=item.get('data'),
+                status='COMPLETED',
+                notes='Importado via Leitura Inteligente com IA'
+            ))
+
+        # Inserção em lote no banco de dados (Bulk Insert)
+        created = Transaction.objects.bulk_create(transactions_to_create)
+
+        messages.success(request, f'🎉 {len(created)} movimentações salvas no seu extrato com sucesso!')
+        return JsonResponse({
+            'status': 'success',
+            'count': len(created),
+            'redirect_url': '/finance/'
+        })
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Erro ao salvar lançamentos: {str(e)}'}, status=500)
+
 
 

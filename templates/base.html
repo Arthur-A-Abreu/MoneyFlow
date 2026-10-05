@@ -46,12 +46,17 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link nav-link-custom {% if 'finance' in request.resolver_match.app_name and 'categories' not in request.path %}active{% endif %}" href="{% url 'finance:transaction_list' %}">
+            <a class="nav-link nav-link-custom {% if 'transaction' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'finance:transaction_list' %}">
               <i class="bi bi-arrow-left-right"></i> Extrato Único
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link nav-link-custom {% if 'categories' in request.path %}active{% endif %}" href="{% url 'finance:category_list' %}">
+            <a class="nav-link nav-link-custom {% if 'ai_import' in request.resolver_match.url_name or 'import' in request.path %}active{% endif %}" href="{% url 'finance:ai_import_page' %}">
+              <i class="bi bi-magic text-primary"></i> Leitura por IA
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom {% if 'category' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'finance:category_list' %}">
               <i class="bi bi-tags-fill"></i> Categorias
             </a>
           </li>

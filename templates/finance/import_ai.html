@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importação Inteligente com IA — MoneyFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
+          <i class="bi bi-stars me-1"></i> Powered by Google Gemini
+        </span>
+        <h1 class="h3 fw-bold text-main mb-0">Leitura Inteligente de Faturas & Extratos</h1>
+      </div>
+      <p class="text-main mb-0">Envie um PDF ou imagem da sua fatura ou extrato bancário. A IA extrai as movimentações automaticamente para você revisar antes de salvar.</p>
+    </div>
+    <div>
+      <a href="{% url 'finance:transaction_list' %}" class="btn btn-outline-custom btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Voltar ao Extrato
+      </a>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 1: Upload e Processamento -->
+  <div class="row g-4 mb-4" id="uploadSection">
+    <div class="col-lg-8 mx-auto">
+      <div class="saas-card p-4 p-md-5 text-center">
+        
+        <form id="aiUploadForm" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <!-- Dropzone -->
+          <div class="border border-2 border-dashed rounded-4 p-4 p-md-5 transition-all" id="dropZone" style="border-color: var(--border-color) !important; background: var(--bg-hover); cursor: pointer;">
+            <input type="file" id="fileInput" name="file" accept=".pdf,image/png,image/jpeg,image/jpg,image/webp" class="d-none">
+            
+            <div id="dropZonePrompt">
+              <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 72px; height: 72px;">
+                <i class="bi bi-cloud-arrow-up fs-1"></i>
+              </div>
+              <h4 class="fw-bold text-main mb-2">Arraste sua fatura ou clique para selecionar</h4>
+              <p class="text-secondary small mb-3">Formatos suportados: <strong>PDF, PNG, JPG, WEBP</strong> (Máx. 10MB)</p>
+              <button type="button" class="btn btn-primary-custom px-4" onclick="document.getElementById('fileInput').click()">
+                <i class="bi bi-folder2-open me-2"></i> Escolher Arquivo
+              </button>
+            </div>
+
+            <!-- Preview do arquivo selecionado -->
+            <div id="fileSelectedView" class="d-none">
+              <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 64px; height: 64px;">
+                <i class="bi bi-file-earmark-check fs-2"></i>
+              </div>
+              <h5 class="fw-bold text-main mb-1" id="selectedFileName">documento.pdf</h5>
+              <p class="text-secondary small mb-3" id="selectedFileSize">0 KB</p>
+              <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-outline-custom btn-sm" onclick="resetUpload()">
+                  <i class="bi bi-x-circle me-1"></i> Trocar Arquivo
+                </button>
+                <button type="submit" class="btn btn-primary-custom btn-sm px-4" id="btnProcess">
+                  <i class="bi bi-cpu-fill me-2"></i> Processar com IA Gemini
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="d-none py-5">
+          <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status">
+            <span class="visually-hidden">Processando...</span>
+          </div>
+          <h4 class="fw-bold text-main mb-2" id="loadingStatusText">A IA está lendo o seu documento...</h4>
+          <p class="text-secondary small mb-0">Isso pode levar de 5 a 15 segundos dependendo do tamanho da fatura.</p>
+          <div class="progress mt-4 mx-auto" style="height: 6px; max-width: 320px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Alerta de Erro -->
+        <div id="errorAlert" class="alert alert-danger d-none mt-4 text-start rounded-3" role="alert">
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+            <div>
+              <strong class="d-block mb-1">Ocorreu um erro no processamento:</strong>
+              <span id="errorMessage" class="small"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2: Tabela de Revisão e Confirmação -->
+  <div class="row d-none" id="reviewSection">
+    <div class="col-12">
+      <div class="saas-card p-4">
+        
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 pb-3 mb-3 border-bottom" style="border-color: var(--border-color) !important;">
+          <div>
+            <h4 class="fw-bold text-main mb-1">
+              <i class="bi bi-check2-circle text-success me-2"></i> Movimentações Identificadas (<span id="txCount">0</span>)
+            </h4>
+            <p class="text-secondary small mb-0">Revise os valores, datas e categorias antes de salvar no seu extrato oficial.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-custom btn-sm" onclick="addNewRow()">
+              <i class="bi bi-plus-circle me-1"></i> Adicionar Linha
+            </button>
+            <button type="button" class="btn btn-outline-custom btn-sm text-danger" onclick="resetUpload()">
+              <i class="bi bi-trash me-1"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-primary-custom btn-sm px-4" id="btnSaveAll" onclick="saveTransactions()">
+              <i class="bi bi-check-lg me-1"></i> Confirmar e Salvar Tudo
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela Responsiva de Edição -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="reviewTable">
+            <thead>
+              <tr class="text-secondary small text-uppercase">
+                <th style="width: 140px;">Data</th>
+                <th>Descrição</th>
+                <th style="width: 160px;">Tipo</th>
+                <th style="width: 220px;">Categoria</th>
+                <th style="width: 160px;">Valor (R$)</th>
+                <th style="width: 60px;" class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="transactionRows">
+              <!-- Linhas inseridas via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rodapé do Resumo -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-4 mt-3 border-top" style="border-color: var(--border-color) !important;">
+          <div class="d-flex gap-4">
+            <div>
+              <span class="text-secondary small d-block">Total Despesas:</span>
+              <strong class="text-danger fs-6" id="totalExpensesDisplay">R$ 0,00</strong>
+            </div>
+            <div>
+              <span class="text-secondary small d-block">Total Receitas:</span>
+              <strong class="text-success fs-6" id="totalIncomesDisplay">R$ 0,00</strong>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary-custom px-4" onclick="saveTransactions()">
+            <i class="bi bi-check-lg me-1"></i> Confirmar e Salvar no Extrato
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Template oculto de categorias para o JS -->
+<div id="categoryOptionsTemplate" class="d-none">
+  {% for cat in categories %}
+    <option value="{{ cat.name }}">{{ cat.name }}</option>
+  {% endfor %}
+</div>
+
+<script>
+  let extractedTransactions = [];
+  let userCategoriesList = [];
+
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const dropZonePrompt = document.getElementById('dropZonePrompt');
+  const fileSelectedView = document.getElementById('fileSelectedView');
+  const selectedFileName = document.getElementById('selectedFileName');
+  const selectedFileSize = document.getElementById('selectedFileSize');
+  const uploadSection = document.getElementById('uploadSection');
+  const loadingState = document.getElementById('loadingState');
+  const errorAlert = document.getElementById('errorAlert');
+  const errorMessage = document.getElementById('errorMessage');
+  const reviewSection = document.getElementById('reviewSection');
+  const transactionRows = document.getElementById('transactionRows');
+
+  // Drag & Drop
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--primary-color)';
+      dropZone.style.background = 'rgba(79, 70, 229, 0.05)';
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--border-color)';
+      dropZone.style.background = 'var(--bg-hover)';
+    });
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileSelected(fileInput.files[0]);
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (fileInput.files && fileInput.files[0]) {
+      handleFileSelected(fileInput.files[0]);
+    }
+  });
+
+  function handleFileSelected(file) {
+    selectedFileName.textContent = file.name;
+    selectedFileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    dropZonePrompt.classList.add('d-none');
+    fileSelectedView.classList.remove('d-none');
+    errorAlert.classList.add('d-none');
+  }
+
+  function resetUpload() {
+    fileInput.value = '';
+    dropZonePrompt.classList.remove('d-none');
+    fileSelectedView.classList.add('d-none');
+    loadingState.classList.add('d-none');
+    errorAlert.classList.add('d-none');
+    uploadSection.classList.remove('d-none');
+    reviewSection.classList.add('d-none');
+    transactionRows.innerHTML = '';
+  }
+
+  // Submit do formulário
+  document.getElementById('aiUploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!fileInput.files || !fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fileSelectedView.classList.add('d-none');
+    loadingState.classList.remove('d-none');
+    errorAlert.classList.add('d-none');
+
+    try {
+      const response = await fetch("{% url 'finance:ai_process_statement' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.status === 'error') {
+        throw new Error(data.message || 'Falha ao processar arquivo com a IA.');
+      }
+
+      extractedTransactions = data.transacoes || [];
+      userCategoriesList = data.categories || [];
+
+      if (extractedTransactions.length === 0) {
+        throw new Error('Nenhuma movimentação financeira foi identificada no documento. Verifique se o arquivo é legível.');
+      }
+
+      renderReviewTable(extractedTransactions);
+      uploadSection.classList.add('d-none');
+      reviewSection.classList.remove('d-none');
+
+    } catch (err) {
+      loadingState.classList.add('d-none');
+      fileSelectedView.classList.remove('d-none');
+      errorMessage.textContent = err.message;
+      errorAlert.classList.remove('d-none');
+    }
+  });
+
+  function renderReviewTable(items) {
+    transactionRows.innerHTML = '';
+    const catOptions = document.getElementById('categoryOptionsTemplate').innerHTML;
+
+    items.forEach((item, index) => {
+      const tr = document.createElement('tr');
+      tr.dataset.index = index;
+      tr.innerHTML = `
+        <td>
+          <input type="date" class="form-control form-control-sm tx-date" value="${item.data || ''}">
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm tx-desc" value="${escapeHtml(item.descricao || '')}">
+        </td>
+        <td>
+          <select class="form-select form-select-sm tx-type" onchange="calculateTotals()">
+            <option value="despesa" ${item.tipo === 'despesa' ? 'selected' : ''}>💸 Despesa</option>
+            <option value="receita" ${item.tipo === 'receita' ? 'selected' : ''}>💰 Receita</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" list="catList" class="form-control form-control-sm tx-cat" value="${escapeHtml(item.categoria || 'Outros')}">
+          <datalist id="catList">${catOptions}</datalist>
+        </td>
+        <td>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">R$</span>
+            <input type="number" step="0.01" class="form-control form-control-sm tx-amount" value="${parseFloat(item.valor || 0).toFixed(2)}" oninput="calculateTotals()">
+          </div>
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)">
+            <i class="bi bi-trash fs-6"></i>
+          </button>
+        </td>
+      `;
+      transactionRows.appendChild(tr);
+    });
+
+    document.getElementById('txCount').textContent = items.length;
+    calculateTotals();
+  }
+
+  function addNewRow() {
+    const catOptions = document.getElementById('categoryOptionsTemplate').innerHTML;
+    const today = new Date().toISOString().split('T')[0];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="date" class="form-control form-control-sm tx-date" value="${today}"></td>
+      <td><input type="text" class="form-control form-control-sm tx-desc" placeholder="Nova movimentação"></td>
+      <td>
+        <select class="form-select form-select-sm tx-type" onchange="calculateTotals()">
+          <option value="despesa" selected>💸 Despesa</option>
+          <option value="receita">💰 Receita</option>
+        </select>
+      </td>
+      <td>
+        <input type="text" list="catList" class="form-control form-control-sm tx-cat" value="Outros">
+        <datalist id="catList">${catOptions}</datalist>
+      </td>
+      <td>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">R$</span>
+          <input type="number" step="0.01" class="form-control form-control-sm tx-amount" value="0.00" oninput="calculateTotals()">
+        </div>
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)">
+          <i class="bi bi-trash fs-6"></i>
+        </button>
+      </td>
+    `;
+    transactionRows.appendChild(tr);
+    updateRowCount();
+    calculateTotals();
+  }
+
+  function removeRow(btn) {
+    btn.closest('tr').remove();
+    updateRowCount();
+    calculateTotals();
+  }
+
+  function updateRowCount() {
+    const count = transactionRows.querySelectorAll('tr').length;
+    document.getElementById('txCount').textContent = count;
+  }
+
+  function calculateTotals() {
+    let totalExp = 0;
+    let totalInc = 0;
+
+    transactionRows.querySelectorAll('tr').forEach(tr => {
+      const type = tr.querySelector('.tx-type').value;
+      const amount = parseFloat(tr.querySelector('.tx-amount').value) || 0;
+      if (type === 'despesa') {
+        totalExp += amount;
+      } else {
+        totalInc += amount;
+      }
+    });
+
+    document.getElementById('totalExpensesDisplay').textContent = 'R$ ' + totalExp.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('totalIncomesDisplay').textContent = 'R$ ' + totalInc.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  }
+
+  async function saveTransactions() {
+    const rows = transactionRows.querySelectorAll('tr');
+    if (rows.length === 0) {
+      alert('Nenhuma linha para salvar.');
+      return;
+    }
+
+    const payload = [];
+    rows.forEach(tr => {
+      payload.push({
+        data: tr.querySelector('.tx-date').value,
+        descricao: tr.querySelector('.tx-desc').value || 'Sem descrição',
+        tipo: tr.querySelector('.tx-type').value,
+        categoria: tr.querySelector('.tx-cat').value || 'Outros',
+        valor: parseFloat(tr.querySelector('.tx-amount').value) || 0
+      });
+    });
+
+    const btnSave = document.getElementById('btnSaveAll');
+    btnSave.disabled = true;
+    btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Salvando...';
+
+    try {
+      const response = await fetch("{% url 'finance:ai_bulk_save' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ transacoes: payload })
+      });
+
+      const res = await response.json();
+      if (!response.ok || res.status === 'error') {
+        throw new Error(res.message || 'Erro ao salvar lançamentos.');
+      }
+
+      window.location.href = res.redirect_url || "{% url 'finance:transaction_list' %}";
+
+    } catch (err) {
+      btnSave.disabled = false;
+      btnSave.innerHTML = '<i class="bi bi-check-lg me-1"></i> Confirmar e Salvar Tudo';
+      alert('Erro ao salvar: ' + err.message);
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>
+{% endblock %}
