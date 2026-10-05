@@ -6,7 +6,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  color-scheme: light;
   --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
 
   /* Brand Palette */
   --color-primary: #4F46E5;
@@ -56,10 +58,13 @@
    DARK MODE — Paleta completamente refeita para máxima legibilidade
    ========================================================================== */
 [data-theme="dark"] {
+  color-scheme: dark;
+
   /* Backgrounds — inspirado no GitHub Dark, profundo mas distinguível */
   --bg-app: #0D1117;
   --bg-surface: #161B22;
   --bg-surface-hover: #1F2937;
+
 
   /* Bordas — visíveis mas sutis (bem mais claras que antes) */
   --border-color: #30363D;
@@ -508,11 +513,20 @@ body {
   transition: var(--transition-fast);
 }
 
-.btn-outline-custom:hover {
+.btn-outline-custom:hover,
+.btn-outline-custom:focus {
   background: var(--bg-surface-hover);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+
+[data-theme="dark"] .btn-outline-custom:hover,
+[data-theme="dark"] .btn-outline-custom:focus {
+  background: var(--bg-surface-hover) !important;
+  border-color: #818CF8 !important;
+  color: #818CF8 !important;
+}
+
 
 /* ==========================================================================
    Inputs e Formulários — adaptados ao dark mode
@@ -578,24 +592,45 @@ body {
 .month-navigator {
   display: inline-flex;
   align-items: center;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: var(--radius-sm);
-  padding: 0.2rem;
+  padding: 0.2rem 0.4rem;
   box-shadow: var(--shadow-sm);
 }
 
 .month-navigator select {
-  border: none;
-  background: transparent;
+  border: none !important;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
   font-weight: 600;
-  color: var(--text-main);
   font-size: 0.9rem;
-  padding: 0.3rem 0.6rem;
+  padding: 0.35rem 0.6rem;
   outline: none;
   cursor: pointer;
   font-family: var(--font-main);
+  border-radius: var(--radius-sm);
 }
+
+.month-navigator select option {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .month-navigator,
+[data-theme="dark"] .month-navigator select,
+[data-theme="dark"] .month-navigator select option {
+  background-color: #161B22 !important;
+  color: #E2E8F0 !important;
+}
+
+[data-theme="light"] .month-navigator,
+[data-theme="light"] .month-navigator select,
+[data-theme="light"] .month-navigator select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
 
 /* ==========================================================================
    Alerts — adaptados ao dark mode
@@ -708,11 +743,64 @@ footer a:hover {
 /* ==========================================================================
    Badges Bootstrap — overrides para dark mode
    ========================================================================== */
+/* ==========================================================================
+   Badges Bootstrap — overrides para dark mode
+   ========================================================================== */
 [data-theme="dark"] .badge.bg-light {
   background-color: var(--bg-surface-hover) !important;
   color: var(--text-muted) !important;
   border-color: var(--border-color) !important;
 }
+
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .text-dark {
+  color: var(--text-main) !important;
+}
+
+/* Fix para dropdowns e selects (Mês/Ano e outros formulários) */
+select option,
+.form-select option {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] select option,
+[data-theme="dark"] .form-select option,
+[data-theme="dark"] .month-navigator select,
+[data-theme="dark"] .month-navigator select option {
+  color-scheme: dark !important;
+  background-color: #161B22 !important;
+  color: #F0F6FC !important;
+}
+
+[data-theme="light"] select,
+[data-theme="light"] .form-select,
+[data-theme="light"] select option,
+[data-theme="light"] .form-select option,
+[data-theme="light"] .month-navigator select,
+[data-theme="light"] .month-navigator select option {
+  color-scheme: light !important;
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+
+[data-theme="dark"] .month-navigator {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .month-navigator select {
+  color: var(--text-main) !important;
+  background-color: #161B22 !important;
+}
+
 
 /* ==========================================================================
    Scrollbar — dark mode

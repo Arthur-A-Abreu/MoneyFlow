@@ -1,10 +1,17 @@
+import json
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
 from apps.finance.models import Transaction, Category
 from apps.finance.forms import TransactionForm, CategoryForm
+
+
 
 
 # ==============================================================================
@@ -202,11 +209,12 @@ def category_delete(request, pk):
                 )
             else:
                 category.delete()
-                messages.success(request, f'Categoria "{category.name}" excluída com sucesso!')
-            return redirect('finance:category_list')
         else:
             messages.error(request, 'Digite "DELETAR" em maiúsculas para confirmar a exclusão.')
+            return redirect('finance:category_list')
 
     return render(request, 'finance/category_confirm_delete.html', {
         'category': category,
     })
+
+

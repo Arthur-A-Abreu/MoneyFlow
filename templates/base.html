@@ -55,6 +55,7 @@
               <i class="bi bi-tags-fill"></i> Categorias
             </a>
           </li>
+
           <li class="nav-item">
             <a class="nav-link nav-link-custom {% if 'insights' in request.resolver_match.app_name %}active{% endif %}" href="{% url 'insights:index' %}">
               <i class="bi bi-lightning-charge-fill text-warning"></i> Insights

@@ -13,26 +13,72 @@
       <p class="text-main mb-0">Visão consolidada das suas movimentações e indicadores inteligentes.</p>
     </div>
 
-    <!-- Navegador de Mês/Ano -->
+    <!-- Navegador de Mês/Ano com Dropdown Customizado (100% compatível com Dark Mode) -->
     <form method="GET" action="{% url 'dashboard:home' %}" id="periodSelectForm" class="d-flex align-items-center gap-2">
-      <div class="month-navigator">
-        <i class="bi bi-calendar-event text-primary ms-2"></i>
-        <select name="month" class="form-select-sm">
-          {% for num, name in months %}
-          <option value="{{ num }}" {% if num == selected_month %}selected{% endif %}>{{ name }}</option>
-          {% endfor %}
-        </select>
-        <select name="year" class="form-select-sm">
-          {% for yr in years %}
-          <option value="{{ yr|stringformat:"d" }}" {% if yr == selected_year %}selected{% endif %}>{{ yr|stringformat:"d" }}</option>
-          {% endfor %}
-        </select>
+      <input type="hidden" name="month" id="inputMonth" value="{{ selected_month }}">
+      <input type="hidden" name="year" id="inputYear" value="{{ selected_year|stringformat:"d" }}">
+
+      <div class="dropdown">
+        <button class="btn btn-outline-custom btn-sm dropdown-toggle d-flex align-items-center gap-2 fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-calendar-event text-primary"></i>
+          <span>
+            {% for num, name in months %}{% if num == selected_month %}{{ name }}{% endif %}{% endfor %} {{ selected_year|stringformat:"d" }}
+          </span>
+        </button>
+
+        <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-custom mt-2" style="min-width: 290px;">
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <span class="text-muted small fw-bold text-center">SELECIONE O MÊS</span>
+          </div>
+
+          <!-- Grade de Meses Centralizados em Português -->
+          <div class="row g-1 mb-3 text-center">
+            {% for num, name in months %}
+            <div class="col-4">
+              <button type="button" 
+                      class="btn btn-sm w-100 {% if num == selected_month %}btn-primary-custom{% else %}btn-outline-custom{% endif %} d-flex align-items-center justify-content-center text-center px-1 py-2 fw-semibold" 
+                      style="font-size: 0.82rem;"
+                      onclick="submitPeriod({{ num }}, {{ selected_year|stringformat:"d" }})">
+                {{ name }}
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <span class="text-muted small fw-bold text-center">ANO</span>
+          </div>
+
+          <!-- Seleção de Ano sem Pontos (ex: 2026) -->
+          <div class="d-flex gap-1 overflow-auto py-1 justify-content-center">
+            {% for yr in years %}
+            <button type="button" 
+                    class="btn btn-sm flex-fill {% if yr == selected_year %}btn-primary-custom{% else %}btn-outline-custom{% endif %} d-flex align-items-center justify-content-center text-center px-2 py-2 fw-semibold" 
+                    style="font-size: 0.82rem;"
+                    onclick="submitPeriod({{ selected_month }}, {{ yr|stringformat:"d" }})">
+              {{ yr|stringformat:"d" }}
+            </button>
+            {% endfor %}
+          </div>
+
+        </div>
       </div>
+
       <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary-custom btn-sm">
         <i class="bi bi-plus-circle"></i> Novo Lançamento
       </a>
     </form>
+
+
+    <script>
+      function submitPeriod(m, y) {
+        document.getElementById('inputMonth').value = m;
+        document.getElementById('inputYear').value = y;
+        document.getElementById('periodSelectForm').submit();
+      }
+    </script>
   </div>
+
 
   <!-- Layout Principal: 75% Conteúdo + 25% Cards Laterais -->
   <div class="row g-4">
@@ -42,16 +88,19 @@
       
       <!-- Seção de Insights Inteligentes -->
       {% if insights %}
-      <div class="saas-card mb-4 border-primary border-opacity-25">
-        <div class="saas-card-header bg-light bg-opacity-50">
+      <div class="saas-card mb-4">
+
+        <div class="saas-card-header">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
             <h6 class="fw-bold mb-0 text-main">Diagnóstico & Insights Inteligentes</h6>
           </div>
-          <a href="{% url 'insights:index' %}?month={{ selected_month }}&year={{ selected_year }}" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold">
+          <a href="{% url 'insights:index' %}?month={{ selected_month }}&year={{ selected_year|stringformat:"d" }}" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold">
             Ver Análise Completa <i class="bi bi-arrow-right"></i>
           </a>
+
         </div>
+
         <div class="saas-card-body pb-1">
           <div class="row g-2">
             {% for insight in insights|slice:":3" %}

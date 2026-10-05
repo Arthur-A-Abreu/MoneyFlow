@@ -23,6 +23,7 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-*xr8@i3d3ro!)^q93u$&kqjf-g0#hza3dk!^f*bai^xdga6+!%')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
+
 _allowed_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.vercel.app')
 
 # Transforma a string em lista e limpa espaços
