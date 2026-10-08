@@ -436,41 +436,100 @@ body {
 }
 
 /* ==========================================================================
-   Transaction Table
+   Tables & Data Grid — custom-table & bootstrap table dark mode overrides
    ========================================================================== */
+.table,
 .custom-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-main);
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--bg-surface-hover);
+  --bs-table-hover-color: var(--text-main);
+  color: var(--text-main);
+  border-color: var(--border-color);
+  background-color: transparent !important;
 }
 
+.table th,
 .custom-table th {
-  background: var(--bg-app);
-  color: var(--text-muted);
+  background: var(--bg-app) !important;
+  color: var(--text-muted) !important;
   font-size: 0.73rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
+.table td,
 .custom-table td {
-  padding: 0.95rem 1rem;
+  padding: 0.85rem 1rem;
   font-size: 0.9rem;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-surface);
+  color: var(--text-main) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background: var(--bg-surface) !important;
   vertical-align: middle;
   transition: background-color 0.15s ease;
 }
 
-.custom-table tr:hover td {
-  background: var(--bg-surface-hover);
+.table > :not(caption) > * > *,
+.custom-table > :not(caption) > * > * {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border-bottom-color: var(--border-color);
+  box-shadow: none !important;
 }
 
-.custom-table tr:last-child td {
+.table thead > tr > th,
+.custom-table thead > tr > th {
+  background-color: var(--bg-app) !important;
+}
+
+.table tr:hover td,
+.custom-table tr:hover td,
+.table tbody tr:hover > *,
+.custom-table tbody tr:hover > * {
+  background: var(--bg-surface-hover) !important;
+}
+
+.custom-table tr:last-child td,
+.table tr:last-child td {
   border-bottom: none;
+}
+
+[data-theme="dark"] .table,
+[data-theme="dark"] .custom-table {
+  --bs-table-bg: var(--bg-surface);
+  --bs-table-color: var(--text-main);
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-bg: var(--bg-surface-hover);
+  --bs-table-hover-color: var(--text-main);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+  --bs-table-striped-color: var(--text-main);
+  --bs-table-active-bg: var(--bg-surface-hover);
+  --bs-table-active-color: var(--text-main);
+}
+
+[data-theme="dark"] .table > :not(caption) > * > *,
+[data-theme="dark"] .custom-table > :not(caption) > * > * {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table thead > tr > th,
+[data-theme="dark"] .custom-table thead > tr > th {
+  background-color: #0D1117 !important;
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
 }
 
 /* ==========================================================================

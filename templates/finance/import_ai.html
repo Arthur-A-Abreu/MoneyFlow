@@ -67,6 +67,11 @@
           </div>
         </form>
 
+        <div class="mt-4 pt-3 border-top d-flex align-items-center justify-content-center gap-2 text-secondary small" style="border-color: var(--border-color) !important;">
+          <i class="bi bi-info-circle text-warning"></i>
+          <span>A IA realiza a leitura automática mas pode cometer erros. Você poderá <strong>revisar e ajustar todas as informações</strong> antes de salvar no seu extrato.</span>
+        </div>
+
         <!-- Loading State -->
         <div id="loadingState" class="d-none py-5">
           <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status">
@@ -119,11 +124,19 @@
           </div>
         </div>
 
+        <!-- Alerta de Aviso e Revisão -->
+        <div class="alert alert-warning border-0 d-flex align-items-center gap-2 mb-3 py-2 px-3 rounded-3">
+          <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
+          <div class="small">
+            <strong>Aviso de Revisão:</strong> A Inteligência Artificial realiza a extração automática, mas pode cometer erros ou imprecisões em datas, valores e categorias. <strong>Confira e ajuste as linhas abaixo antes de confirmar o salvamento.</strong>
+          </div>
+        </div>
+
         <!-- Tabela Responsiva de Edição -->
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0" id="reviewTable">
+          <table class="custom-table align-middle mb-0" id="reviewTable">
             <thead>
-              <tr class="text-secondary small text-uppercase">
+              <tr>
                 <th style="width: 140px;">Data</th>
                 <th>Descrição</th>
                 <th style="width: 160px;">Tipo</th>
@@ -161,12 +174,12 @@
 
 </div>
 
-<!-- Template oculto de categorias para o JS -->
-<div id="categoryOptionsTemplate" class="d-none">
+<!-- Datalist global de categorias -->
+<datalist id="categoryDatalist">
   {% for cat in categories %}
     <option value="{{ cat.name }}">{{ cat.name }}</option>
   {% endfor %}
-</div>
+</datalist>
 
 <script>
   let extractedTransactions = [];
@@ -282,7 +295,12 @@
 
   function renderReviewTable(items) {
     transactionRows.innerHTML = '';
-    const catOptions = document.getElementById('categoryOptionsTemplate').innerHTML;
+    if (userCategoriesList && userCategoriesList.length > 0) {
+      const datalist = document.getElementById('categoryDatalist');
+      if (datalist) {
+        datalist.innerHTML = userCategoriesList.map(c => `<option value="${escapeHtml(c.name || c)}">${escapeHtml(c.name || c)}</option>`).join('');
+      }
+    }
 
     items.forEach((item, index) => {
       const tr = document.createElement('tr');
@@ -301,8 +319,7 @@
           </select>
         </td>
         <td>
-          <input type="text" list="catList" class="form-control form-control-sm tx-cat" value="${escapeHtml(item.categoria || 'Outros')}">
-          <datalist id="catList">${catOptions}</datalist>
+          <input type="text" list="categoryDatalist" class="form-control form-control-sm tx-cat" value="${escapeHtml(item.categoria || 'Outros')}">
         </td>
         <td>
           <div class="input-group input-group-sm">
@@ -311,7 +328,7 @@
           </div>
         </td>
         <td class="text-center">
-          <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)">
+          <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)" title="Remover">
             <i class="bi bi-trash fs-6"></i>
           </button>
         </td>
@@ -324,7 +341,6 @@
   }
 
   function addNewRow() {
-    const catOptions = document.getElementById('categoryOptionsTemplate').innerHTML;
     const today = new Date().toISOString().split('T')[0];
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -337,8 +353,7 @@
         </select>
       </td>
       <td>
-        <input type="text" list="catList" class="form-control form-control-sm tx-cat" value="Outros">
-        <datalist id="catList">${catOptions}</datalist>
+        <input type="text" list="categoryDatalist" class="form-control form-control-sm tx-cat" value="Outros">
       </td>
       <td>
         <div class="input-group input-group-sm">
@@ -347,7 +362,7 @@
         </div>
       </td>
       <td class="text-center">
-        <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)">
+        <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(this)" title="Remover">
           <i class="bi bi-trash fs-6"></i>
         </button>
       </td>
